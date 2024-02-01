@@ -1,5 +1,8 @@
 import 'package:args/args.dart';
 
+import 'package:web_socket_channel/web_socket_channel.dart';
+import 'package:web_socket_channel/status.dart' as status;
+
 const String version = '0.0.1';
 
 ArgParser buildParser() {
@@ -28,7 +31,7 @@ void printUsage(ArgParser argParser) {
   print(argParser.usage);
 }
 
-void main(List<String> arguments) {
+void main(List<String> arguments) async {
   final ArgParser argParser = buildParser();
   try {
     final ArgResults results = argParser.parse(arguments);
@@ -58,4 +61,18 @@ void main(List<String> arguments) {
     print('');
     printUsage(argParser);
   }
+
+  final wsUrl = Uri.parse('wss://relay.nostrss.re');
+  final channel = WebSocketChannel.connect(wsUrl);
+  await channel.ready;
+  int limit = 10;
+  channel.sink.add('["REQ","sub1",{"limit":${limit}}]');
+  int count = 0;
+  channel.stream.listen((message) {
+    print(message);
+    count++;
+    if (count == limit) {
+      channel.sink.close(status.goingAway);
+    }
+  });
 }
