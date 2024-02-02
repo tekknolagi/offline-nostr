@@ -22,12 +22,19 @@ class Event {
   EventKind kind;
 
   Event(this.pubkey, this.created_at, this.kind);
+  static Event fromJSON(dynamic json) {
+    assert(json is Map);
+    return Event("hi", Int64(123), EventKind.metadata);
+  }
 }
 
 class EventMessage {
 }
 
 class Filter {
+  static Filter fromJSON(dynamic json) {
+    return Filter();
+  }
 }
 
 class Store {
@@ -51,11 +58,52 @@ void main() async {
         EventKind.metadata));
 }
 
+class ClientMessage {
+  static ClientMessage fromJSON(dynamic json) {
+    assert(json is List);
+    assert(json.length >= 1);
+    if (json[0] == "EVENT") {
+      assert(json.length == 2);
+      return EventClientMessage(Event.fromJSON(json[1]));
+    }
+    if (json[0] == "REQ") {
+      assert(json.length >= 3);
+      return ReqClientMessage(json[1], json.sublist(2).map<Filter>(Filter.fromJSON).toList());
+    }
+    if (json[0] == "CLOSE") {
+      assert(json.length == 2);
+      return CloseClientMessage(json[1]);
+    }
+    throw 'unknown message type';
+  }
+}
+
+class EventClientMessage extends ClientMessage {
+  final Event event;
+
+  EventClientMessage(this.event);
+}
+
+class ReqClientMessage extends ClientMessage {
+  final String subscription_id;
+  final List<Filter> filters;
+
+  ReqClientMessage(this.subscription_id, this.filters);
+}
+
+class CloseClientMessage extends ClientMessage {
+  final String subscription_id;
+
+  CloseClientMessage(this.subscription_id);
+}
+
 void onWebSocketData(WebSocket client){
   var subscription;
   subscription = client.listen((data_str) {
     final data = json.decode(data_str);
+    final message = ClientMessage.fromJSON(data);
     print('Echo: $data');
+    print('Echo: $message');
     client.add('Echo: $data');
   });
 }

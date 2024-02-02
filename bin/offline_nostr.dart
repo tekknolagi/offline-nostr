@@ -68,6 +68,7 @@ void main(List<String> arguments) async {
   await channel.ready;
   int limit = 10;
   channel.sink.add('["REQ","sub1",{"limit":${limit}}]');
+  channel.sink.add('["EVENT",{"id": "abc"}]');
   int count = 0;
   var subscription;
   subscription = channel.stream.listen((message) {
