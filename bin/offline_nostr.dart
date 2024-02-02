@@ -2,6 +2,7 @@ import 'package:args/args.dart';
 
 import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:web_socket_channel/status.dart' as status;
+import 'dart:io';
 
 const String version = '0.0.1';
 
@@ -68,11 +69,17 @@ void main(List<String> arguments) async {
   int limit = 10;
   channel.sink.add('["REQ","sub1",{"limit":${limit}}]');
   int count = 0;
-  channel.stream.listen((message) {
+  var subscription;
+  subscription = channel.stream.listen((message) {
     print(message);
     count++;
     if (count == limit) {
-      channel.sink.close(status.goingAway);
+      channel.sink.close(WebSocketStatus.normalClosure);
+      // TODO(max): Figure out why cancelling the subscription is fast but the
+      // application just sits around doing nothing for a couple seconds before
+      // quitting. Right now we can exit immediately by closing the sink, but
+      // we get an exception.
+      // await subscription.cancel();
     }
   });
 }
