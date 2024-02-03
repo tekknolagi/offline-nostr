@@ -71,18 +71,19 @@ void main(List<String> arguments) async {
   channel.sink.add('["REQ","sub1",{"limit":${limit}}]');
   channel.sink.add('["EVENT",{"id": "abc"}]');
   int count = 0;
-  var subscription;
-  subscription = channel.stream.listen((message) async {
-    print(message);
-    count++;
+  channel.stream.listen((message) {
     if (count == limit) {
-      // channel.sink.close(WebSocketStatus.normalClosure);
-      // TODO(max): Figure out why cancelling the subscription is fast but the
-      // application just sits around doing nothing for a couple seconds before
-      // quitting. Right now we can exit immediately by closing the sink, but
-      // we get an exception.
-      // await subscription.cancel();
+      print("Closing...");
+      // TODO(max): Why does this execute twice?
+      channel.sink.close(status.goingAway);
+    } else {
+      print(message);
+      count++;
+      channel.sink.add('["EVENT",{"id": "$count"}]');
     }
+  }, onDone: () {
+    print('Done');
+  }, onError: (error) {
+    print('Error: $error');
   });
-  await channel.sink.close(WebSocketStatus.normalClosure);
 }
