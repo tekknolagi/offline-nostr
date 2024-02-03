@@ -63,7 +63,8 @@ void main(List<String> arguments) async {
     printUsage(argParser);
   }
 
-  final wsUrl = Uri.parse('wss://relay.nostrss.re');
+  // final wsUrl = Uri.parse('wss://relay.nostrss.re');
+  final wsUrl = Uri.parse('ws://localhost:5600');
   final channel = WebSocketChannel.connect(wsUrl);
   await channel.ready;
   int limit = 10;
@@ -71,11 +72,11 @@ void main(List<String> arguments) async {
   channel.sink.add('["EVENT",{"id": "abc"}]');
   int count = 0;
   var subscription;
-  subscription = channel.stream.listen((message) {
+  subscription = channel.stream.listen((message) async {
     print(message);
     count++;
     if (count == limit) {
-      channel.sink.close(WebSocketStatus.normalClosure);
+      // channel.sink.close(WebSocketStatus.normalClosure);
       // TODO(max): Figure out why cancelling the subscription is fast but the
       // application just sits around doing nothing for a couple seconds before
       // quitting. Right now we can exit immediately by closing the sink, but
@@ -83,4 +84,5 @@ void main(List<String> arguments) async {
       // await subscription.cancel();
     }
   });
+  await channel.sink.close(WebSocketStatus.normalClosure);
 }
