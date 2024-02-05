@@ -11,9 +11,12 @@ void main() async {
   assert(keys.public ==
       "981cc2078af05b62ee1f98cff325aac755bf5c5836a265c254447b5933c6223b");
   Event event = Event.from(
-  kind: 1, tags: [], content: "Hello, world!", privkey: keys.private,
-  // TODO(max): Remove this and use current time
-  createdAt: 0);
+      kind: 1,
+      tags: [],
+      content: "Hello, world!",
+      privkey: keys.private,
+      // TODO(max): Remove this and use current time
+      createdAt: 0);
   assert(event.pubkey == keys.public);
   assert(event.isValid() == true);
   print(event.serialize());
